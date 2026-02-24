@@ -4,7 +4,7 @@
 
 Give your autonomous agents your company's playbook. One corpus. Every agent. Every team member.
 
-[![npm version](https://img.shields.io/npm/v/@bundlai/cli)](https://www.npmjs.com/package/@bundlai/cli)
+[![npm version](https://img.shields.io/npm/v/@bundl-corp/cli)](https://www.npmjs.com/package/@bundl-corp/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-supported-black)](https://claude.ai/code)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-supported-black)](#)
@@ -24,7 +24,7 @@ Give your autonomous agents your company's playbook. One corpus. Every agent. Ev
 ## ⚡ Quick Start
 
 ```bash
-npm install -g @bundlai/cli
+npm install -g @bundl-corp/cli
 bundl init
 ```
 
@@ -190,7 +190,7 @@ bundl push
 
 > 🚧 **Coming soon.** Team workspace sync, browser extension, and dashboard are in active development.
 >
-> [Join the waitlist at bundl.ai →](https://bundl.ai/company)
+> [Learn more at bundl.ai →](https://bundl.ai/company)
 
 When available, `bundl push` will sync your corpus to a shared team workspace — keeping every agent, every extension, and every team member on the same playbook automatically.
 
@@ -251,10 +251,10 @@ bundl --version
 
 ## Community
 
-- 🐦 [Twitter / X](https://x.com/bundlai)
+- 🐦 [Twitter / X](https://x.com/bundlprompts)
 - 💬 [Discord](#) *(coming soon)*
 - 🌐 [bundl.ai](https://bundl.ai)
-- 📦 [npm](https://www.npmjs.com/package/@bundlai/cli)
+- 📦 [npm](https://www.npmjs.com/package/@bundl-corp/cli)
 
 ---
 

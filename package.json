@@ -1,5 +1,5 @@
 {
-  "name": "@bundlai/cli",
+  "name": "@bundl-corp/cli",
   "version": "0.1.0",
   "description": "The open corpus standard for AI employees",
   "keywords": ["ai", "agents", "claude", "llm", "corpus", "agent-skills", "sop", "openclaw", "opencode", "cursor"],
