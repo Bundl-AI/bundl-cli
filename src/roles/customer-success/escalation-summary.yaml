@@ -1,0 +1,124 @@
+id: cs-escalation-summary
+name: Escalation Summary
+role: customer-success-manager
+category: support
+version: "1.0.0"
+type: document
+load: on-demand
+trigger_description: "When a customer situation requires an executive-ready escalation brief (e.g. for VP, leadership, or cross-team handoff). Trigger when company_name, situation_description, and timeline_of_events are provided."
+inputs:
+  required:
+    - name: company_name
+      description: Customer company or account name
+      example: "Vantage Logistics"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: situation_description
+      description: Clear description of the situation (issue, complaint, risk)
+      example: "Customer reported repeated API timeouts in production over the past week. They have threatened to pause expansion and raised the issue with their executive sponsor."
+      source:
+        agent: situation_description
+        human: "Situation description"
+    - name: timeline_of_events
+      description: Chronological timeline of what happened and when
+      example: "March 10: First timeout reported. March 11: We identified region-specific latency. March 12: Customer reported 3 more incidents. March 13: Customer asked for exec involvement. March 14: Engineering identified root cause and deployed fix; monitoring."
+      source:
+        agent: timeline_of_events
+        human: "Timeline of events"
+  optional:
+    - name: customer_sentiment
+      description: How the customer has expressed feeling (frustrated, understanding, etc.)
+      example: "Frustrated but willing to give us a chance if fix holds. Executive sponsor is concerned."
+      source:
+        agent: customer_sentiment
+        human: "Customer sentiment"
+      fallback: "Not assessed"
+    - name: revenue_at_risk
+      description: Contract value or expansion at risk if unresolved
+      example: "$120K ARR; $80K expansion at risk."
+      source:
+        agent: revenue_at_risk
+        human: "Revenue at risk"
+      fallback: "Not specified"
+    - name: what_has_been_tried
+      description: Actions already taken to resolve
+      example: "Support tickets, engineering investigation, temporary workaround, root cause fix deployed."
+      source:
+        agent: what_has_been_tried
+        human: "What has been tried"
+      fallback: "Not provided"
+    - name: csm_notes
+      description: Additional CSM context or internal notes
+      example: "Champion is technical; exec sponsor is new to the account. We need to show stability before QBR."
+      source:
+        agent: csm_notes
+        human: "CSM notes"
+      fallback: "None"
+system_prompt: |
+  You are writing an executive-ready escalation brief. A VP or lead should be able to read this and act (e.g. join a call, make a decision, delegate) without asking for more context. Use clear language; no jargon. Total length 250–400 words.
+
+  Structure the output exactly into these sections. Use the section headers as written below.
+
+  1. SITUATION SUMMARY — Exactly 3 sentences: what the situation is, why it matters, and current status (e.g. fix deployed, awaiting customer confirmation).
+
+  2. TIMELINE — Bullet list of key events in order (date and event). Concise; 5–10 bullets typical.
+
+  3. CUSTOMER SENTIMENT — 1–2 sentences on how the customer has expressed feeling and any escalation to their exec or other stakeholders. If not provided, say "Not yet assessed; recommend quick check-in."
+
+  4. WHAT WAS TRIED — Bullet list of actions already taken (support, engineering, workarounds, fixes). If not provided, say "Details to be confirmed."
+
+  5. RECOMMENDED RESOLUTION — 2–4 sentences on what should happen next (e.g. exec call, written summary, monitoring period, follow-up date). Be specific and actionable.
+
+  6. RISK IF UNRESOLVED — 1–2 sentences on what happens if we do not resolve (e.g. churn, contract pause, expansion at risk). If revenue_at_risk was provided, reference it.
+
+  7. SUGGESTED OWNER — Who should own the next step (role or name if known). E.g. "VP Customer Success for exec call" or "CSM to send summary and schedule follow-up in 48 hours."
+
+  No placeholders. Write so the reader can act immediately.
+example_output: |
+  SITUATION SUMMARY
+  Vantage Logistics has experienced repeated API timeouts in production over the past week and has threatened to pause expansion and escalate to their executive sponsor. We have identified and deployed a fix; the situation is now in a monitoring phase. We need to confirm stability with the customer and provide a clear summary to their exec to restore confidence.
+
+  TIMELINE
+  - March 10: Customer reported first API timeout in production.
+  - March 11: Support and Engineering identified region-specific latency; investigation started.
+  - March 12: Customer reported 3 more incidents; frustration increased.
+  - March 13: Customer requested executive involvement; CSM notified leadership.
+  - March 14: Engineering identified root cause (config + load); fix deployed. Monitoring in place.
+  - March 15 (current): Awaiting 24–48 hour stability window before customer update.
+
+  CUSTOMER SENTIMENT
+  Frustrated but willing to give us a chance if the fix holds. Their executive sponsor has been briefed and is concerned; we need to show stability and a clear path forward.
+
+  WHAT WAS TRIED
+  - Support tickets logged and triaged; Engineering engaged same day.
+  - Temporary workaround suggested where possible.
+  - Root cause identified (configuration and load in one region); fix deployed March 14.
+  - Monitoring and alerting enhanced; no recurrence in last 24 hours.
+
+  RECOMMENDED RESOLUTION
+  (1) CSM to send a short written summary to the customer (today) confirming the fix and monitoring plan. (2) Offer an exec-to-exec call within the next 5 business days if they want to hear directly from us. (3) Commit to a 48-hour stability check and then a follow-up call with the technical champion. (4) If stability holds, use the upcoming QBR to reinforce reliability and expansion path.
+
+  RISK IF UNRESOLVED
+  $120K ARR at risk; $80K expansion on hold. Customer may pause rollout and consider alternatives if confidence is not restored.
+
+  SUGGESTED OWNER
+  VP Customer Success to approve messaging and be available for exec call if requested. CSM to own customer communication and 48-hour follow-up.
+tools: []
+constraints:
+  - Output must follow the seven section headers exactly.
+  - 250–400 words. No jargon; VP can act without asking questions.
+  - Use only provided inputs; do not invent timeline or revenue.
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - All seven sections present
+  - Situation summary is exactly 3 sentences
+  - Recommended resolution is specific and actionable
+  - Suggested owner is named
+  - 250–400 words
+surfaces:
+  human: true
+  agent: true

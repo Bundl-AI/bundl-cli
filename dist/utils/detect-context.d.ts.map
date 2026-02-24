@@ -1,0 +1,1 @@
+{"version":3,"file":"detect-context.d.ts","sourceRoot":"","sources":["../../src/utils/detect-context.ts"],"names":[],"mappings":"AAGA,MAAM,MAAM,cAAc,GAAG;IAC3B,IAAI,EAAE,MAAM,GAAG,IAAI,CAAC;IACpB,QAAQ,EAAE,MAAM,GAAG,IAAI,CAAC;IACxB,UAAU,EAAE,MAAM,GAAG,KAAK,CAAC;CAC5B,CAAC;AA8DF;;GAEG;AACH,wBAAgB,oBAAoB,CAAC,GAAG,GAAE,MAAsB,GAAG,cAAc,CAqBhF"}

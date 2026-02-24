@@ -1,0 +1,1 @@
+{"version":3,"file":"openai-api.js","sourceRoot":"","sources":["../../src/providers/openai-api.ts"],"names":[],"mappings":"AAAA;;GAEG;AAEH,OAAO,EAAE,GAAG,EAAE,MAAM,iBAAiB,CAAC;AAEtC,MAAM,CAAC,MAAM,IAAI,GAAG,YAAY,CAAC;AAEjC,MAAM,CAAC,KAAK,UAAU,WAAW;IAC/B,2CAA2C;IAC3C,OAAO,IAAI,CAAC;AACd,CAAC;AAED,MAAM,UAAU,SAAS;IACvB,OAAO,GAAG,CAAC;AACb,CAAC"}

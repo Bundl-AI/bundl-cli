@@ -1,0 +1,98 @@
+id: cs-onboarding-milestone-check
+name: Onboarding Milestone Check
+role: customer-success-manager
+category: onboarding
+version: "1.0.0"
+type: workflow
+load: on-demand
+trigger_description: "When a CSM is checking onboarding progress for a customer. Trigger when company_name, onboarding_start_date, and completed_milestones are provided."
+inputs:
+  required:
+    - name: company_name
+      description: Customer company or account name
+      example: "Ridgeway Manufacturing"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: onboarding_start_date
+      description: Date when onboarding started
+      example: "February 1, 2025"
+      source:
+        agent: onboarding_start_date
+        human: "Onboarding start date"
+    - name: completed_milestones
+      description: List of milestones that have been completed
+      example: "Account setup, SSO configured, initial data import, first report created"
+      source:
+        agent: completed_milestones
+        human: "Completed milestones"
+  optional:
+    - name: outstanding_milestones
+      description: Milestones not yet completed (if tracked)
+      example: "Go-live with 2nd team, admin training, first business review"
+      source:
+        agent: outstanding_milestones
+        human: "Outstanding milestones"
+      fallback: "Derive from standard onboarding playbook if not provided"
+    - name: blockers_reported
+      description: Any blockers the customer or CSM has reported
+      example: "IT delayed SSO by 2 weeks. Data import had format issues — resolved."
+      source:
+        agent: blockers_reported
+        human: "Blockers reported"
+      fallback: "None reported"
+    - name: csm_notes
+      description: Recent CSM notes or context
+      example: "Champion is responsive; broader team adoption is slow. Go-live target was March 15."
+      source:
+        agent: csm_notes
+        human: "CSM notes"
+      fallback: "None"
+system_prompt: |
+  You are helping a CSM track onboarding progress and identify blockers. Your job is to compute completion percentage, summarize status per milestone, analyze blockers, and recommend an intervention if the account is behind.
+
+  Use the standard onboarding milestone set unless outstanding_milestones is provided — then use completed + outstanding to derive the full list. Typical milestones: account setup, SSO/access, data import, first report/deliverable, training, go-live (first team or first use case), business review.
+
+  Output structure:
+  1. COMPLETION PERCENTAGE — X% based on completed vs total milestones. State total milestones and completed count.
+  2. STATUS PER MILESTONE — For each milestone (completed or not): name, status (Done / In progress / Not started / Blocked), and one line of context if relevant (e.g. "Done — completed 2/10," "Blocked — IT delayed SSO").
+  3. BLOCKER ANALYSIS — If blockers_reported or any milestone is Blocked: summarize what is blocked, cause, and whether it's resolved or still open. If no blockers, say "No active blockers."
+  4. RECOMMENDED INTERVENTION — If the account is behind (e.g. past expected go-live, low completion for elapsed time), recommend one concrete intervention (e.g. "Schedule working session to unblock data import," "Escalate to customer sponsor to prioritize training"). If on track, say "On track; recommend [next milestone] by [date]." Use onboarding_start_date and csm_notes to gauge "behind."
+
+  Be specific to the account. No generic filler.
+example_output: |
+  COMPLETION PERCENTAGE: 57% (4 of 7 milestones completed). Onboarding started February 1, 2025; ~6 weeks elapsed.
+
+  STATUS PER MILESTONE:
+  - Account setup: Done — completed 2/3.
+  - SSO configured: Done — completed 2/15 (delayed by IT).
+  - Initial data import: Done — completed 2/20; format issues resolved.
+  - First report created: Done — completed 2/22.
+  - Go-live with 2nd team: Not started — originally targeted 3/15; at risk.
+  - Admin training: Not started — dependent on broader team availability.
+  - First business review: Not started — typically after go-live.
+
+  BLOCKER ANALYSIS:
+  - SSO was a blocker for 2 weeks (IT delay). Resolved.
+  - Data import format issues were resolved with support. No open technical blockers.
+  - Current risk: slow broader team adoption and no scheduled training. Champion is responsive but team availability is limited; go-live target (3/15) may slip.
+
+  RECOMMENDED INTERVENTION:
+  Account is behind on go-live and training for elapsed time. Recommend: (1) Schedule a 30-min working session with the champion and 1–2 team leads to lock a go-live date and training session in the next 10 days. (2) If they cannot commit to a date, escalate to the customer sponsor (e.g. VP or director) to prioritize. (3) Add a lightweight "office hours" or async training option if live training is hard to schedule.
+tools: []
+constraints:
+  - Use only provided inputs; do not invent milestones or completion dates.
+  - Completion percentage must be based on completed vs total milestones clearly stated.
+  - If behind, intervention must be concrete and actionable.
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - Completion percentage with milestone counts
+  - Status per milestone (Done / In progress / Not started / Blocked)
+  - Blocker analysis (or "No active blockers")
+  - Recommended intervention if behind, or on-track next step
+surfaces:
+  human: true
+  agent: true

@@ -1,0 +1,119 @@
+id: sales-pre-call-research-brief
+name: Pre-Call Research Brief
+role: sales-development-rep
+category: research
+version: "1.0.0"
+type: document
+load: on-demand
+trigger_description: "When an AE is preparing for a scheduled call with a prospect and has at least company_name, contact_name, and contact_title. Trigger 1–24 hours before the meeting so the brief can be read and used as-is."
+inputs:
+  required:
+    - name: company_name
+      description: Company or organization name
+      example: "Meridian Health Systems"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: contact_name
+      description: Full name of the contact for the call
+      example: "Sarah Chen"
+      source:
+        agent: contact_name
+        human: "Contact name"
+    - name: contact_title
+      description: Job title of the contact
+      example: "VP of Operations"
+      source:
+        agent: contact_title
+        human: "Contact title"
+  optional:
+    - name: meeting_date
+      description: Date and optionally time of the meeting
+      example: "March 14, 2025 — 2:00 PM ET"
+      source:
+        agent: meeting_date
+        human: "Meeting date"
+      fallback: "Not specified"
+    - name: previous_interactions
+      description: Summary of prior touches (emails, calls, demos)
+      example: "Discovery call 3/1. They asked about HIPAA and integration with Epic. Demo scheduled after positive discovery."
+      source:
+        agent: previous_interactions
+        human: "Previous interactions"
+      fallback: "No prior interactions — treat as first meeting"
+    - name: known_competitors
+      description: Competitors or solutions they are evaluating or using
+      example: "Currently use internal tools; evaluating 2 vendors including us."
+      source:
+        agent: known_competitors
+        human: "Known competitors"
+      fallback: "Unknown"
+    - name: crm_data
+      description: Relevant CRM fields (industry, size, deal stage, notes)
+      example: "Industry: Healthcare. 12 locations. Deal stage: Demo. Last note: Concern about implementation timeline."
+      source:
+        agent: crm_data
+        human: "CRM data"
+      fallback: "None"
+system_prompt: |
+  You are writing a pre-call research brief for an Account Executive. The AE will use this document as-is or with minor edits — no generic fluff. Be specific: use the company name, contact name, title, and any optional context (previous interactions, competitors, CRM data) to produce a brief that feels researched and actionable.
+
+  Structure the output exactly into these sections. Use the section headers as written below. Total length 300–500 words.
+
+  1. COMPANY OVERVIEW — 2–3 sentences on what the company does, size/scale if known, and any recent relevant news (funding, expansion, product). If no news is available, say so and focus on what they do.
+
+  2. CONTACT BACKGROUND — Who [contact_name] is: title, likely responsibilities based on title, and any relevant background from previous_interactions or CRM (e.g. "Drove similar initiative at prior company," "Technical buyer").
+
+  3. RELATIONSHIP HISTORY — Bullet summary of prior touches: what was discussed, what they cared about, what was committed. If no previous interactions, state "First meeting" and one sentence on how the meeting was set (e.g. "Inbound lead from webinar").
+
+  4. RECOMMENDED AGENDA — Exactly 4 bullet points: what to cover and in what order (e.g. "Confirm goals and timeline from discovery," "Walk through [specific feature] they asked about," "Address implementation timeline concern," "Agree on next step and owner").
+
+  5. OPEN QUESTIONS — 3–5 questions the AE should ask or clarify (specific to this account, not generic). Examples: "Who else is involved in the decision?" "What does their current process look like in practice?" "What would need to be true for them to pilot in Q2?"
+
+  6. WATCH OUT FOR — 1–3 risks, objections, or topics to handle carefully (e.g. "Implementation timeline came up in discovery — have proof points ready," "Competitor X may be in the mix — do not bad-mouth; focus on our differentiator").
+
+  Write in clear, scannable prose. No placeholders or [brackets]. Use real-seeming detail from the inputs.
+example_output: |
+  COMPANY OVERVIEW
+  Meridian Health Systems operates 12 regional care centers across the Pacific Northwest, focused on outpatient surgery and rehabilitation. They employ roughly 1,200 staff and have been growing through acquisition; two sites were added in the last 18 months. No recent funding or executive news in the past 6 months; focus appears to be on standardizing operations across the expanded footprint.
+
+  CONTACT BACKGROUND
+  Sarah Chen is VP of Operations, likely responsible for day-to-day operations, capacity, and cross-site consistency. In discovery she asked about HIPAA and Epic integration, suggesting she cares about compliance and existing system fit. She has been the primary contact from the start and appears to be both champion and key evaluator.
+
+  RELATIONSHIP HISTORY
+  - Discovery call held 3/1. Discussed care coordination pain points, current tools (mostly manual/spreadsheets), and desire to pilot before full rollout.
+  - They asked about HIPAA and Epic; we confirmed compliance and integration options. Implementation timeline was a concern — "need to be live before Q3."
+  - Demo was scheduled after positive discovery. This call is the demo.
+
+  RECOMMENDED AGENDA
+  1. Confirm goals and success criteria for the pilot (what does "success" look like in 90 days).
+  2. Walk through the care coordination workflow in our product, tying each step to what they described in discovery.
+  3. Dedicate 5–7 minutes to implementation: timeline, typical rollout, and what we need from them (e.g. Epic access, key users).
+  4. Agree on next step: who else needs to see the product, and timeline for a pilot decision.
+
+  OPEN QUESTIONS
+  - Who else is in the decision process besides Sarah, and what do they care about most?
+  - What does "live before Q3" mean in practice — first site, or all 12?
+  - Have they evaluated or ruled out any other vendors? If so, why?
+  - What would need to be true for them to start a pilot in the next 60 days?
+
+  WATCH OUT FOR
+  - Implementation timeline was a concern in discovery. Have a one-pager or slide on typical 8–10 week rollout and one example customer who went live quickly. Do not overpromise dates.
+  - If they mention other vendors, do not bad-mouth; focus on our differentiator (e.g. time to value, support model).
+tools: []
+constraints:
+  - Output must follow the six section headers exactly.
+  - 300–500 words total. Specific to the account, not generic.
+  - No placeholders or [brackets]. Use only provided inputs; do not invent facts.
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - All six sections present (company_overview, contact_background, relationship_history, recommended_agenda, open_questions, watch_out_for)
+  - Recommended agenda has exactly 4 points; open questions 3–5
+  - AE can use the brief as-is or with minor edits
+  - 300–500 words, specific and actionable
+surfaces:
+  human: true
+  agent: true

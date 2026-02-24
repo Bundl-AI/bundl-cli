@@ -1,0 +1,89 @@
+id: sales-outreach-personalization
+name: Outreach Personalization
+role: sales-development-rep
+category: outreach
+version: "1.0.0"
+type: workflow
+load: on-demand
+trigger_description: "When the user is drafting a first-touch outbound email to a prospect and has at least prospect_name, prospect_title, and company_name. Trigger only for net-new outreach, not reply threads."
+inputs:
+  required:
+    - name: prospect_name
+      description: First or full name of the prospect
+      example: "James Okonkwo"
+      source:
+        agent: prospect_name
+        human: "Prospect name"
+    - name: prospect_title
+      description: Job title of the prospect
+      example: "Head of Customer Experience"
+      source:
+        agent: prospect_title
+        human: "Prospect title"
+    - name: company_name
+      description: Company or organization name
+      example: "Vantage Logistics"
+      source:
+        agent: company_name
+        human: "Company name"
+  optional:
+    - name: recent_company_news
+      description: Recent news about the company (funding, product, exec change)
+      example: "Raised Series B in January; expanding into EU."
+      source:
+        agent: recent_company_news
+        human: "Recent company news"
+      fallback: "Do not reference news; use other hooks"
+    - name: prospect_linkedin_summary
+      description: Short summary or headline from LinkedIn
+      example: "15 years in CX; focused on reducing churn and scaling support."
+      source:
+        agent: prospect_linkedin_summary
+        human: "Prospect LinkedIn summary"
+      fallback: "Focus on title and company only"
+    - name: pain_point_hypothesis
+      description: Suspected pain point or use case we solve
+      example: "Likely struggling with support scaling and consistency."
+      source:
+        agent: pain_point_hypothesis
+        human: "Pain point hypothesis"
+      fallback: "Use generic value prop tied to title/role"
+    - name: mutual_connection
+      description: Name of a mutual connection if any
+      example: "Referred by Maria Santos from your team"
+      source:
+        agent: mutual_connection
+        human: "Mutual connection"
+      fallback: "No referral; do not mention referrals"
+system_prompt: |
+  You are writing a first-touch outbound email for an SDR. The email must feel personal and specific — not a template. Use the prospect's name, title, company, and any optional context (news, LinkedIn, pain point, referral) to open with a relevant hook. The body should connect that hook to why we're reaching out and one clear, low-commitment ask (e.g. 15-minute call, reply with one answer), not an immediate demo request.
+
+  Rules: (1) Total email body under 150 words. (2) No mentions of competitor names or "vs. [competitor]." (3) No generic openers like "I hope this finds you well" or "I wanted to reach out." (4) Do not ask for a demo in the first touch; suggest a short conversation or one question. (5) Include a subject line that is specific to them (company, role, or news) — not "Quick question" or "Idea for [Company]."
+
+  Output: Subject line on one line, then a blank line, then the email body. No labels like "Subject:" or "Body:" in the output — just the subject line and the body.
+example_output: |
+  Subject: Vantage's EU expansion and scaling CX
+
+  James — saw Vantage's Series B and the EU move; congrats. As you scale support across regions, many heads of CX we talk to hit the same wall: keeping quality and tone consistent when teams and time zones multiply.
+
+  We help companies like Vantage do that without adding headcount. Would a 15-minute call to compare notes on how you're thinking about scaling CX be useful? No pitch — just one or two things we've seen work.
+
+  [SDR name]
+tools: []
+constraints:
+  - Do not mention any competitor by name or imply comparison to a specific competitor.
+  - No generic openers (e.g. "I hope this finds you well," "I wanted to reach out").
+  - Do not ask for a demo in the first touch; use a lower-commitment ask.
+  - Email body must be under 150 words.
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - Subject line is specific to prospect/company (not generic)
+  - Body under 150 words with a clear, relevant hook
+  - One low-commitment ask (no demo in first touch)
+  - No competitor mentions or generic openers
+surfaces:
+  human: true
+  agent: true

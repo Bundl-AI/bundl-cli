@@ -1,0 +1,109 @@
+id: cs-churn-risk-response
+name: Churn Risk Response
+role: customer-success-manager
+category: retention
+version: "1.0.0"
+type: workflow
+load: on-demand
+trigger_description: "When an account is at risk of churn and the CSM needs an intervention plan. Trigger when company_name, churn_signals, and current_health_status are provided (e.g. from health assessment or direct risk flag)."
+inputs:
+  required:
+    - name: company_name
+      description: Customer company or account name
+      example: "Vantage Logistics"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: churn_signals
+      description: What indicates churn risk (usage drop, NPS, support issues, stated intent, etc.)
+      example: "Usage down 50%. Champion left. NPS dropped to 22. Customer said 'evaluating options' in last call."
+      source:
+        agent: churn_signals
+        human: "Churn signals"
+    - name: current_health_status
+      description: Current health assessment (e.g. RED from health-score-assessment)
+      example: "RED. Low engagement, champion departure, negative sentiment."
+      source:
+        agent: current_health_status
+        human: "Current health status"
+  optional:
+    - name: contract_value
+      description: ARR or contract value
+      example: "$85K ARR"
+      source:
+        agent: contract_value
+        human: "Contract value"
+      fallback: "Not specified"
+    - name: renewal_date
+      description: Contract renewal date
+      example: "June 30, 2025"
+      source:
+        agent: renewal_date
+        human: "Renewal date"
+      fallback: "Not provided"
+    - name: key_contact
+      description: Current key contact or sponsor (if known)
+      example: "Sarah Chen (VP Ops) — new to role; predecessor was champion."
+      source:
+        agent: key_contact
+        human: "Key contact"
+      fallback: "Unknown — need to identify sponsor"
+    - name: previous_intervention_attempts
+      description: What has already been tried to save the account
+      example: "Health call offered twice — declined. Email check-in sent; no reply for 2 weeks."
+      source:
+        agent: previous_intervention_attempts
+        human: "Previous intervention attempts"
+      fallback: "None yet"
+system_prompt: |
+  You are creating an intervention plan for an at-risk account. Your job is to output risk severity (HIGH or MEDIUM), recommended outreach approach, what to say, what not to say, when to escalate, and a fallback if there is no response.
+
+  Use churn_signals and current_health_status to set severity: HIGH = active churn intent, no engagement, or very little time to renewal. MEDIUM = clear risk signals but some engagement or more time. Consider contract_value and renewal_date when recommending urgency.
+
+  Output structure:
+  1. RISK SEVERITY — HIGH or MEDIUM, with one-line rationale.
+  2. RECOMMENDED OUTREACH APPROACH — How to reach them (e.g. "Exec-to-exec email + calendar invite for 15 min," "Try champion's manager as new sponsor"). Consider key_contact and previous_intervention_attempts; do not repeat what has already failed without a twist (e.g. different channel, different sender).
+  3. WHAT TO SAY — 2–4 sentences or bullet points the CSM can use (opening and key message). Empathetic; acknowledge their situation. Focus on "we want to understand and help" not "we want to save the contract." Offer a low-commitment next step (e.g. 15-minute call, one question).
+  4. WHAT NOT TO SAY — 1–2 things to avoid (e.g. "Do not lead with contract or renewal," "Do not blame the departed champion").
+  5. ESCALATION TRIGGER — When to escalate (e.g. "If no response in 5 business days," "If they say they are not renewing," "If they request a formal exit process"). Be specific.
+  6. FALLBACK IF NO RESPONSE — What to do if they do not respond (e.g. "One more email from VP; then move to exit process and document for win-back in 12 months," "Try LinkedIn or alternate contact from account").
+
+  Be specific to the account. No generic save-the-customer fluff.
+example_output: |
+  RISK SEVERITY: HIGH — Usage down 50%, champion departed, NPS 22, and "evaluating options" stated. Limited time to renewal (June 30) and prior outreach (health call, email) has not been accepted.
+
+  RECOMMENDED OUTREACH APPROACH
+  - Shift to exec-to-exec: our VP or Director reaches out to their VP Ops (Sarah Chen) with a short email and one ask: a 15-minute call to understand what would need to change for them to reconsider. Sarah is new to the role; she may be more open than the departed champion.
+  - Do not send another generic "checking in" from the CSM; they have already declined twice. Change the sender and the ask (listen, not sell).
+  - If we have a mutual connection (e.g. sales who closed them), consider a brief intro from that person to Sarah.
+
+  WHAT TO SAY
+  - "I know the last few months have been disruptive with [champion]'s departure and your team's priorities shifting. I'm not here to pitch — I'd like to understand what's going on and whether there's anything we could do differently. Would a 15-minute call in the next week work?"
+  - Keep it short. Acknowledge change and listen. If they agree to the call, the goal is to uncover: what would need to be true for them to stay, or what would they need to see from us?
+
+  WHAT NOT TO SAY
+  - Do not lead with contract value, renewal date, or "we want to save your account." It feels transactional.
+  - Do not blame the departed champion or imply they were the only reason things worked.
+
+  ESCALATION TRIGGER
+  - Escalate to VP/director if: (1) No response to exec outreach in 5 business days, or (2) Customer explicitly says they are not renewing or requests exit/offboarding. At that point, move to formal offboarding and document for win-back in 12 months.
+
+  FALLBACK IF NO RESPONSE
+  - After one exec email and one follow-up (e.g. 3 days later), if still no response: send a final short email stating we are here if they want to talk, and that we will assume they are not renewing unless we hear otherwise by [date 2 weeks before renewal]. Then run standard offboarding, preserve feedback in CRM, and set a win-back task for 12 months post-churn.
+tools: []
+constraints:
+  - Use only provided inputs; do not invent churn signals or prior attempts.
+  - Severity must be HIGH or MEDIUM with clear rationale.
+  - '"What to say" must be empathetic and low-commitment ask; no hard sell.'
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - Risk severity HIGH/MEDIUM with rationale
+  - Recommended outreach approach is concrete and accounts for prior attempts
+  - What to say / what not to say included
+  - Escalation trigger and fallback if no response are specific
+surfaces:
+  human: true
+  agent: true

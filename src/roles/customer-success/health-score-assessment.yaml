@@ -1,0 +1,107 @@
+id: cs-health-score-assessment
+name: Health Score Assessment
+role: customer-success-manager
+category: health
+version: "1.0.0"
+type: workflow
+load: on-demand
+trigger_description: "When a CSM needs to assess account health and decide on action. Trigger when company_name and product_usage_summary are available (e.g. from CRM or usage dashboard)."
+inputs:
+  required:
+    - name: company_name
+      description: Customer company or account name
+      example: "Vantage Logistics"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: product_usage_summary
+      description: Summary of how the customer is using the product (features, frequency, users, trend)
+      example: "Logins down 30% vs last quarter. Report usage stable. API calls up. Key users: 3 active of 12 licensed."
+      source:
+        agent: product_usage_summary
+        human: "Product usage summary"
+  optional:
+    - name: nps_score
+      description: Most recent NPS or satisfaction score if available
+      example: "NPS 42 (promoter). Last survey 6 weeks ago."
+      source:
+        agent: nps_score
+        human: "NPS score"
+      fallback: "Not available — do not assume"
+    - name: support_ticket_count
+      description: Open or recent support ticket count and severity
+      example: "2 open (1 P2, 1 P3). 5 closed in last 30 days."
+      source:
+        agent: support_ticket_count
+        human: "Support ticket count"
+      fallback: "Not provided"
+    - name: days_since_last_login
+      description: Days since last login by primary users or admin
+      example: "Primary admin: 4 days. Last full-team login: 12 days."
+      source:
+        agent: days_since_last_login
+        human: "Days since last login"
+      fallback: "Unknown"
+    - name: contract_renewal_date
+      description: Contract or renewal date
+      example: "Renewal June 30, 2025"
+      source:
+        agent: contract_renewal_date
+        human: "Contract renewal date"
+      fallback: "Not provided"
+    - name: expansion_revenue_potential
+      description: Known or estimated expansion opportunity
+      example: "2 additional teams interested; ~$40K expansion potential."
+      source:
+        agent: expansion_revenue_potential
+        human: "Expansion revenue potential"
+      fallback: "None identified"
+system_prompt: |
+  You are assessing customer account health for a CSM. Your job is to output a RED / YELLOW / GREEN status, reasoning per signal, one recommended immediate action, and a 30-day action plan.
+
+  Use only the inputs provided. For optional inputs that are missing, say "Not provided" and do not assume values. Weight signals appropriately: usage decline and support issues are strong signals; NPS and renewal timing add context. RED = at-risk, needs urgent intervention. YELLOW = watch list or proactive touch needed. GREEN = healthy, opportunity to expand or deepen.
+
+  Output structure:
+  1. STATUS — One of RED, YELLOW, GREEN, with one-line rationale.
+  2. REASONING PER SIGNAL — Bullet list: for each input that was provided, what it indicates (e.g. "Logins down 30% — risk of disengagement" or "NPS 42 — positive sentiment").
+  3. RECOMMENDED IMMEDIATE ACTION — One concrete action the CSM should take in the next 1–3 days (e.g. "Schedule health call with primary admin and champion," "Send check-in email and offer office hours").
+  4. 30-DAY ACTION PLAN — 3–5 bullet steps over the next 30 days (e.g. "Week 1: Health call. Week 2: Share usage tips. Week 3: Check on P2 ticket. Week 4: Recap and set next quarter goals.").
+
+  Be specific to the account. No generic advice.
+example_output: |
+  STATUS: YELLOW — Usage decline and low active-user ratio suggest disengagement risk; no critical support or NPS red flags yet.
+
+  REASONING PER SIGNAL:
+  - Product usage summary: Logins down 30% vs last quarter; only 3 of 12 licensed users active. Report usage stable and API up — suggests power users still engaged but broad adoption slipping.
+  - NPS 42 (promoter) from 6 weeks ago — positive but may be stale; worth re-checking if we do a health call.
+  - Support: 2 open (1 P2, 1 P3). P2 could contribute to frustration; resolve before it compounds.
+  - Days since last login: Primary admin 4 days; full team 12 days. Indicates risk of drift if not re-engaged.
+  - Renewal June 30, 2025 — enough time to intervene but not infinite; prioritize next 60 days.
+
+  RECOMMENDED IMMEDIATE ACTION:
+  Schedule a 30-minute health call with the primary admin and at least one champion in the next 3 days. Agenda: (1) How are things going? (2) Any blockers or feedback? (3) Quick wins to re-engage the 9 underutilized users. Do not lead with "we noticed usage is down" — lead with "we want to make sure you're getting value."
+
+  30-DAY ACTION PLAN:
+  - Week 1: Send calendar invite for health call; in parallel, have support prioritize P2 ticket and communicate resolution to customer.
+  - Week 2: Conduct health call; if positive, send 2–3 usage tips or a short "getting the most out of [product]" resource.
+  - Week 3: Follow up on P2 resolution and ask if the 9 inactive users need training or role-based content.
+  - Week 4: Recap what was done and set one or two goals for the next quarter (e.g. "Get 2 more teams onboarded," "Run one internal training"). Schedule next touch before renewal.
+tools: []
+constraints:
+  - Use only provided inputs; do not invent NPS, ticket counts, or usage data.
+  - Status must be exactly RED, YELLOW, or GREEN with clear rationale.
+  - Immediate action must be concrete and doable in 1–3 days.
+handoff:
+  conditions:
+    - "Status is RED"
+    - "Customer has expressed churn intent or requested cancellation"
+  escalate_to: churn-risk-response
+  handoff_message: "Account health is RED or churn intent expressed. Trigger churn-risk-response workflow with company_name, churn_signals, and current_health_status."
+success_criteria:
+  - Status RED/YELLOW/GREEN with one-line rationale
+  - Reasoning per signal for each provided input
+  - One immediate action (1–3 days)
+  - 30-day action plan with 3–5 steps
+surfaces:
+  human: true
+  agent: true

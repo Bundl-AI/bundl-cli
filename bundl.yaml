@@ -1,0 +1,4 @@
+version: 0.1.0
+ai_provider: claude-code
+targets:
+  - cursor

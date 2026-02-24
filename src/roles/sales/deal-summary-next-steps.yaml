@@ -1,0 +1,120 @@
+id: sales-deal-summary-next-steps
+name: Deal Summary & Next Steps
+role: sales-development-rep
+category: deal-management
+version: "1.0.0"
+type: document
+load: on-demand
+trigger_description: "When an AE has just finished a meeting (call or in-person) with a prospect and needs a post-meeting summary with clear next steps. Trigger when company_name, contact_name, meeting_date, and what_was_discussed are provided."
+inputs:
+  required:
+    - name: company_name
+      description: Company or organization name
+      example: "Meridian Health Systems"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: contact_name
+      description: Full name of the primary contact in the meeting
+      example: "Sarah Chen"
+      source:
+        agent: contact_name
+        human: "Contact name"
+    - name: meeting_date
+      description: Date (and optionally time) of the meeting
+      example: "March 14, 2025"
+      source:
+        agent: meeting_date
+        human: "Meeting date"
+    - name: what_was_discussed
+      description: Summary of what was discussed in the meeting (agenda, topics, outcomes)
+      example: "Demo of care coordination workflow. Sarah brought in David from IT for integration questions. They liked the workflow; concerned about implementation timeline. Asked for a reference in healthcare. No pricing discussed."
+      source:
+        agent: what_was_discussed
+        human: "What was discussed"
+  optional:
+    - name: demo_given
+      description: Whether a product demo was part of the meeting
+      example: "Yes — full workflow demo, ~25 min"
+      source:
+        agent: demo_given
+        human: "Demo given"
+      fallback: "Not specified"
+    - name: objections_raised
+      description: Any objections or concerns raised
+      example: "Implementation timeline; need to be live before Q3. IT resource availability."
+      source:
+        agent: objections_raised
+        human: "Objections raised"
+      fallback: "None noted"
+    - name: competitors_mentioned
+      description: Competitors or alternatives they mentioned
+      example: "Evaluating one other vendor; did not name them."
+      source:
+        agent: competitors_mentioned
+        human: "Competitors mentioned"
+      fallback: "None mentioned"
+    - name: verbal_commitments
+      description: Any verbal commitments or strong signals from the prospect
+      example: "Sarah said she wants to move to pilot if reference check goes well. David to send Epic specs by Friday."
+      source:
+        agent: verbal_commitments
+        human: "Verbal commitments"
+      fallback: "None"
+system_prompt: |
+  You are writing a post-meeting summary for an Account Executive. The document must be usable in CRM, for handoffs, and for the AE's own follow-up. Be specific: use company name, contact name, meeting date, and the content of what_was_discussed. Incorporate optional inputs (demo_given, objections_raised, competitors_mentioned, verbal_commitments) when provided.
+
+  Structure the output exactly into these sections. Use the section headers as written below.
+
+  1. MEETING SUMMARY — 3–5 sentences capturing what happened: who was there, what was covered, and the main takeaway. No fluff.
+
+  2. WHAT THEY CARE ABOUT — Bullet list of the prospect's stated priorities, goals, or concerns (e.g. "Live before Q3," "Epic integration," "Reference in healthcare"). Use their words where possible.
+
+  3. OPEN QUESTIONS — Bullet list of questions that remain unanswered (from their side or ours). Include who needs to answer if known (e.g. "David to confirm Epic API access").
+
+  4. NEXT STEPS — For each next step: what, who owns it, and by when. Use format "Owner: [name/role]. Due: [date]." At least 2–4 next steps. One should be our follow-up (e.g. "Send reference contact and implementation one-pager. Owner: AE. Due: 3/16.")
+
+  5. RISK FLAGS — Any risks or concerns that could slow or kill the deal (e.g. "Timeline is tight; if IT can't deliver Epic specs, pilot may slip," "Competitor in the mix — not named"). If none, say "None identified."
+
+  Write in clear, scannable prose. No placeholders. Total length appropriate to the meeting (typically 200–350 words). If optional inputs are missing, say "Not provided" or "None noted" where relevant rather than inventing.
+example_output: |
+  MEETING SUMMARY
+  Demo call on March 14, 2025 with Sarah Chen (VP Operations) and David from IT at Meridian Health Systems. We ran a full workflow demo (~25 min) focused on care coordination. Sarah was engaged; David asked detailed integration questions, especially Epic. They liked the workflow but raised implementation timeline — they need to be live before Q3. Sarah asked for a reference in healthcare. No pricing discussed. Sarah said she wants to move to pilot if the reference check goes well; David committed to sending Epic specs by Friday.
+
+  WHAT THEY CARE ABOUT
+  - Going live before Q3 (likely first site or pilot, not all 12).
+  - Epic integration and IT resource availability.
+  - Validation from a similar healthcare customer (reference).
+  - Clear implementation path; they've been burned by long rollouts before.
+
+  OPEN QUESTIONS
+  - Exact definition of "live before Q3" — first site vs. broader rollout.
+  - Who else is in the decision (Sarah suggested she'll socialize with one more stakeholder).
+  - David to confirm Epic API access and send specs — due Friday 3/15.
+
+  NEXT STEPS
+  - Send reference contact (healthcare) and implementation one-pager. Owner: AE. Due: 3/16.
+  - Receive Epic specs from David. Owner: David. Due: 3/15.
+  - Schedule follow-up call after reference conversation and once Epic specs are reviewed. Owner: AE. Due: 3/20.
+  - If reference and Epic review are positive, send pilot proposal and timeline. Owner: AE. Due: 3/22.
+
+  RISK FLAGS
+  - Timeline is aggressive. If David does not deliver Epic specs on time or IT resources are limited, pilot may slip into Q3.
+  - One other vendor under evaluation; not named. Ensure we differentiate on implementation speed and reference quality.
+tools: []
+constraints:
+  - Output must follow the five section headers exactly.
+  - Next steps must include owner and date for each. No vague "follow up" without owner/due.
+  - Use only provided inputs; do not invent objections, competitors, or commitments.
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - All five sections present (meeting_summary, what_they_care_about, open_questions, next_steps, risk_flags)
+  - Next steps have owner and date for each
+  - Summary is specific to the meeting, not generic
+  - 200–350 words typical
+surfaces:
+  human: true
+  agent: true

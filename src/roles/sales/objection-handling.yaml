@@ -1,0 +1,81 @@
+id: sales-objection-handling
+name: Objection Handling
+role: sales-development-rep
+category: conversation
+version: "1.0.0"
+type: workflow
+load: on-demand
+trigger_description: "When a prospect has raised an objection in a call or email and the rep needs a recommended response. Trigger when objection_text and deal_stage are provided."
+inputs:
+  required:
+    - name: objection_text
+      description: The exact or paraphrased objection from the prospect
+      example: "We're already using [Competitor] and switching would be too disruptive."
+      source:
+        agent: objection_text
+        human: "Objection text"
+    - name: deal_stage
+      description: Current stage of the opportunity (e.g. discovery, demo, proposal, negotiation)
+      example: "Demo completed"
+      source:
+        agent: deal_stage
+        human: "Deal stage"
+  optional:
+    - name: previous_context
+      description: Brief context from the conversation or prior touches
+      example: "They liked the product but brought up switching cost in the last call."
+      source:
+        agent: previous_context
+        human: "Previous context"
+      fallback: "None — respond based on objection and stage only"
+    - name: company_size
+      description: Company size or segment (e.g. mid-market, enterprise)
+      example: "~400 employees"
+      source:
+        agent: company_size
+        human: "Company size"
+      fallback: "Unknown"
+    - name: known_alternatives_they_use
+      description: Competitor or tool they currently use if known
+      example: "They use Zendesk and have 2 years of history."
+      source:
+        agent: known_alternatives_they_use
+        human: "Known alternatives they use"
+      fallback: "Do not assume; avoid naming a specific competitor unless provided"
+system_prompt: |
+  You are helping a sales rep respond to a prospect's objection. Your job is to give a recommended response the rep can use (or adapt), plus reasoning, what not to say, and a clear next step.
+
+  Be empathetic and honest. Do not bad-mouth the prospect's current solution or oversell. Acknowledge the objection, then reframe or add information that moves the conversation forward (e.g. migration path, proof from similar customers, or a small next step that reduces perceived risk). If the objection is a hard blocker (e.g. contract with incumbent for 18 months), say so and recommend a follow-up date or handoff instead of pushing.
+
+  Use deal_stage to tailor the response: early stage may need more education; proposal stage may need proof or a pilot; negotiation may need scope or terms. If previous_context or known_alternatives_they_use are provided, use them to avoid generic lines and to reference their situation.
+
+  Output: (1) Recommended response — 2–4 sentences the rep can say or write; (2) Reasoning — why this response works; (3) What not to say — 1–2 things to avoid; (4) Next step — one concrete follow-up (e.g. "Send case study and suggest 2-week pilot," "Schedule follow-up for Q3 when contract is up").
+example_output: |
+  RECOMMENDED RESPONSE:
+  "That makes sense — switching any tool your team uses daily is a real consideration. A lot of teams we work with felt the same way. What we've seen is that the heaviest lift is usually the first 2–3 weeks; after that, people are surprised how fast they stop thinking about the old system. Would it help if we put together a short migration plan tailored to how you're using [Competitor] today, so you can see exactly what would move and when?"
+
+  REASONING:
+  Acknowledges the objection without dismissing it. Reframes "disruption" into a finite period and offers a concrete, low-commitment next step (migration plan) that reduces uncertainty. Invites them to share how they use the incumbent so we can be specific.
+
+  WHAT NOT TO SAY:
+  - Do not say "[Competitor] is limited" or "You'll outgrow them." It puts them on the defensive.
+  - Do not promise a timeline like "You'll be fully migrated in 30 days" without a proper scoping conversation.
+
+  NEXT STEP:
+  Send a follow-up email offering a 30-minute migration planning call. Before the call, ask them to share (or screen-share) their current setup so the plan is specific. If they agree to the call, treat it as a commitment to explore; if they decline, note "switching cost" as a risk and set a reminder for 2–3 months or when their contract is up.
+tools: []
+constraints:
+  - Do not bad-mouth the prospect's current vendor or solution.
+  - Do not make specific promises (e.g. migration timeline) without qualification.
+  - Use provided context (previous_context, known_alternatives) when available.
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - Recommended response is 2–4 sentences and usable as-is or with minor edits
+  - Reasoning and "what not to say" are included
+  - One clear next step is stated
+surfaces:
+  human: true
+  agent: true

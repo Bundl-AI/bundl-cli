@@ -1,0 +1,110 @@
+id: sales-lead-qualification
+name: Lead Qualification
+role: sales-development-rep
+category: qualification
+version: "1.0.0"
+type: workflow
+load: on-demand
+trigger_description: "When a new inbound lead is created or updated in the CRM and the agent needs to decide whether to pursue, disqualify, or escalate. Trigger only when lead_name, company_name, lead_title, and lead_message are available."
+inputs:
+  required:
+    - name: lead_name
+      description: Full name of the lead/contact
+      example: "Sarah Chen"
+      source:
+        agent: lead_name
+        human: "Lead name"
+    - name: company_name
+      description: Company or organization name
+      example: "Meridian Health Systems"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: lead_title
+      description: Job title of the lead
+      example: "VP of Operations"
+      source:
+        agent: lead_title
+        human: "Lead title"
+    - name: lead_message
+      description: Inbound message or form submission content from the lead
+      example: "We're evaluating solutions for our care coordination workflow. Looking to pilot in Q2. Budget not yet approved."
+      source:
+        agent: lead_message
+        human: "Lead message"
+  optional:
+    - name: company_size
+      description: Employee count or size band (e.g. 50-200, 500+)
+      example: "150 employees"
+      source:
+        agent: company_size
+        human: "Company size"
+      fallback: "Unknown — do not assume; note as gap"
+    - name: company_stage
+      description: Funding or growth stage (e.g. Series B, enterprise)
+      example: "Series C"
+      source:
+        agent: company_stage
+        human: "Company stage"
+      fallback: "Unknown"
+    - name: lead_source
+      description: Where the lead came from (e.g. webinar, website, referral)
+      example: "Website — pricing page"
+      source:
+        agent: lead_source
+        human: "Lead source"
+      fallback: "Unknown"
+    - name: crm_data
+      description: Structured CRM fields (industry, revenue, previous touches)
+      example: "Industry: Healthcare. Last touch: 3 days ago. No prior demo."
+      source:
+        agent: crm_data
+        human: "CRM data"
+      fallback: "None"
+system_prompt: |
+  You are qualifying an inbound lead against our Ideal Customer Profile (ICP). Your job is to score the lead 1–10, explain fits and gaps, and output a clear decision: PROCEED, DO NOT PROCEED, or ESCALATE.
+
+  ICP criteria we care about: (1) Company size and stage that can buy our product; (2) Title/role that is budget holder or strong influencer; (3) Stated need that maps to our core use case; (4) Timeline that is realistic (pilot or buy in next 1–2 quarters); (5) No red flags (e.g. legal/compliance blocking, wrong vertical, pure tire-kicker).
+
+  Be specific. Cite exact phrases from lead_message and lead_title when explaining fits/gaps. Do not invent data; if optional inputs are missing, say "Unknown" or "Not provided" and note it as a gap or assumption.
+
+  Output exactly: (1) ICP score 1–10 with one-line rationale; (2) Fits — bullet list; (3) Gaps — bullet list; (4) Decision — PROCEED / DO NOT PROCEED / ESCALATE; (5) Next action — one concrete next step (e.g. "Send discovery questions," "Disqualify with template," "Escalate to AE for demo request").
+
+  You must never quote pricing, never commit to a specific timeline (e.g. "We can have you live by March"), and must escalate if the lead mentions legal, procurement, or formal RFP in a way that suggests they cannot move without it.
+example_output: |
+  ICP SCORE: 7/10 — Strong title and use case; timeline and budget clarity needed.
+
+  FITS:
+  - Title (VP Operations) is decision-maker or strong influencer for care coordination tools.
+  - Stated need (care coordination workflow) maps to our core product.
+  - Pilot in Q2 indicates a realistic timeline window.
+
+  GAPS:
+  - Budget not yet approved — risk of long cycle or no budget.
+  - Company size unknown — if <50 employees, may be below our minimum contract.
+
+  DECISION: PROCEED
+
+  NEXT ACTION: Send discovery email with 3–4 questions (budget process, team size, key stakeholders). Do not offer demo until budget and timeline are confirmed. If they reply mentioning legal or procurement, escalate to sales ops.
+tools: []
+constraints:
+  - Never quote pricing or discount levels.
+  - Never commit to a specific go-live or delivery timeline.
+  - Escalate immediately if the lead mentions legal, procurement, or formal RFP as a blocker.
+  - Use only provided inputs; do not invent company size, stage, or revenue.
+handoff:
+  conditions:
+    - "Lead explicitly requests a demo or live walkthrough"
+    - "ICP score is 8 or above and lead has budget/timeline signals"
+    - "Lead mentions legal, procurement, or RFP as part of their process"
+  escalate_to: sales-development-rep-demo-or-ae-handoff
+  handoff_message: "Lead meets handoff criteria. Route to AE for demo or legal/procurement handling. Include ICP score and next action from qualification."
+success_criteria:
+  - ICP score 1–10 with clear rationale
+  - Fits and gaps explicitly listed
+  - Decision is one of PROCEED, DO NOT PROCEED, ESCALATE
+  - One concrete next action stated
+  - No pricing or timeline commitments
+surfaces:
+  human: true
+  agent: true

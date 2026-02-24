@@ -1,0 +1,120 @@
+id: cs-qbr-preparation
+name: QBR Preparation
+role: customer-success-manager
+category: qbr
+version: "1.0.0"
+type: document
+load: on-demand
+trigger_description: "When a CSM is preparing a Quarterly Business Review (QBR) and has at least company_name, review_period, and key_metrics_summary. Trigger 1–2 weeks before the QBR."
+inputs:
+  required:
+    - name: company_name
+      description: Customer company or account name
+      example: "Ridgeway Manufacturing"
+      source:
+        agent: company_name
+        human: "Company name"
+    - name: review_period
+      description: The period the QBR covers (e.g. Q1 2025, Jan–Mar 2025)
+      example: "Q1 2025"
+      source:
+        agent: review_period
+        human: "Review period"
+    - name: key_metrics_summary
+      description: Summary of key usage or outcome metrics for the period
+      example: "Active users up 25%. Report runs up 40%. API calls stable. 2 new teams onboarded. NPS 54."
+      source:
+        agent: key_metrics_summary
+        human: "Key metrics summary"
+  optional:
+    - name: expansion_opportunities
+      description: Known or suspected expansion opportunities
+      example: "2 additional divisions interested; potential add-on module."
+      source:
+        agent: expansion_opportunities
+        human: "Expansion opportunities"
+      fallback: "None identified — focus on adoption and retention"
+    - name: open_support_issues
+      description: Open or recent support issues
+      example: "1 P3 open. 3 P3s closed in Q1."
+      source:
+        agent: open_support_issues
+        human: "Open support issues"
+      fallback: "None or not provided"
+    - name: nps_trend
+      description: NPS or satisfaction trend if available
+      example: "NPS 54, up from 48 last quarter."
+      source:
+        agent: nps_trend
+        human: "NPS trend"
+      fallback: "Not available"
+    - name: upcoming_renewals
+      description: Renewal date or contract context
+      example: "Renewal Sept 30, 2025. Expansion discussion planned for Q2."
+      source:
+        agent: upcoming_renewals
+        human: "Upcoming renewals"
+      fallback: "Not specified"
+system_prompt: |
+  You are preparing a structured QBR agenda and talking points for a CSM. The output should be usable to run the meeting: agenda, what to highlight, how to frame metrics, risks to address, expansion angle, and a recommended ask.
+
+  Structure the output exactly into these sections. Use the section headers as written below.
+
+  1. AGENDA — 5–7 agenda items with suggested time (e.g. "Welcome and objectives (5 min)," "Q1 metrics review (15 min)"). Include time for feedback and next steps.
+
+  2. WINS TO HIGHLIGHT — 3–5 specific wins from the period (use key_metrics_summary and optional inputs). Be concrete: "Active users up 25% — 2 new teams onboarded" not "Strong adoption."
+
+  3. METRICS NARRATIVE — 2–4 sentences the CSM can use to describe the period: what improved, what stayed stable, what it means for the customer. Use their numbers. No generic fluff.
+
+  4. RISKS TO ADDRESS — Any risks or concerns to acknowledge (e.g. open support issues, delayed go-live, NPS dip). If none, say "None to proactively address." Include suggested phrasing if the topic is sensitive.
+
+  5. EXPANSION ANGLE — If expansion_opportunities provided, one paragraph on how to position expansion (e.g. "Two divisions interested — suggest pilot scope and timeline in this QBR"). If not provided, say "Focus on adoption and value; no expansion push this quarter."
+
+  6. RECOMMENDED ASK — One clear ask for the end of the QBR (e.g. "Commit to reference call," "Schedule expansion discovery for Q2," "Identify champion for next quarter's training"). Make it specific and achievable.
+
+  Total length appropriate for a 30–45 min QBR prep (250–400 words). No placeholders.
+example_output: |
+  AGENDA
+  1. Welcome and QBR objectives (5 min)
+  2. Q1 2025 metrics review (15 min)
+  3. Wins and use cases (10 min)
+  4. Roadmap preview and feedback (10 min)
+  5. Expansion and next quarter (5 min)
+  6. Action items and close (5 min)
+
+  WINS TO HIGHLIGHT
+  - Active users up 25%; 2 new teams onboarded in Q1.
+  - Report runs up 40% — indicates deeper adoption in existing teams.
+  - API usage stable; no reliability issues in the period.
+  - NPS 54, up from 48 — improving satisfaction.
+  - Successful go-live for the second plant; on schedule.
+
+  METRICS NARRATIVE
+  "In Q1 we saw strong adoption: active users grew 25% and we brought two new teams onto the platform. Report usage was up 40%, which suggests your teams are relying on the product for more of their day-to-day work. API usage stayed stable with no major incidents. Your NPS improved to 54, and we're glad to see that trend. The second plant go-live completed on schedule, so you're now running in two locations as planned."
+
+  RISKS TO ADDRESS
+  - One P3 support ticket was open for most of Q1 (resolved late March). Acknowledge briefly: "We had one longer-running support item in Q1; we've resolved it and adjusted our process so similar items get faster escalation." Do not dwell unless they bring it up.
+
+  EXPANSION ANGLE
+  Two additional divisions have expressed interest; one has asked about the add-on module. Use the QBR to confirm their goals and suggest a short discovery call in Q2 to scope a pilot. Position as "building on the success of the two teams you've already onboarded" rather than a hard sell.
+
+  RECOMMENDED ASK
+  Ask them to commit to one reference call or case study conversation in Q2 (for a similar manufacturing customer). Frame it as "your experience would help others in your industry" and set a date before leaving the meeting.
+tools: []
+constraints:
+  - Output must follow the six section headers exactly.
+  - Use only provided inputs; do not invent metrics or expansion opportunities.
+  - Agenda should be runnable (times and order).
+handoff:
+  conditions: []
+  escalate_to: ""
+  handoff_message: ""
+success_criteria:
+  - All six sections present (agenda, wins_to_highlight, metrics_narrative, risks_to_address, expansion_angle, recommended_ask)
+  - Agenda has 5–7 items with suggested time
+  - Metrics narrative uses provided numbers
+  - One specific recommended ask
+  - 250–400 words
+surfaces:
+  human: true
+  agent: true
