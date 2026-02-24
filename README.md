@@ -1,4 +1,4 @@
-# Bundl
+# bundl - Bundl CLI
 
 **The open corpus standard for AI employees.**
 
