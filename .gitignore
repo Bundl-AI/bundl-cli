@@ -25,7 +25,7 @@ bundl.yaml
 ~/.bundl/
 .bundl/credentials
 
-# Environment
+# Environment — never commit
 .env
 .env.local
 .env.*

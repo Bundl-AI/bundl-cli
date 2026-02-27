@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { Command } from "commander";
 import { showBanner } from "./utils/banner.js";
 import { setLoggerFlags } from "./utils/logger.js";
+import { getCredentials, getValidToken } from "./utils/auth.js";
 
 // Ctrl+C during inquirer prompts rejects with ExitPromptError; exit cleanly (no stack trace)
 process.on("unhandledRejection", (reason: unknown) => {
@@ -50,6 +51,22 @@ const argv = process.argv;
 if (argv.includes("--help") || argv.includes("-h")) {
   showBanner();
 }
+
+// Proactive refresh: if token expires within 30 minutes, refresh in background
+async function silentRefreshIfNeeded(): Promise<void> {
+  const creds = getCredentials();
+  if (!creds) return;
+
+  const thirtyMinutes = 30 * 60;
+  if (creds.expires_at < Date.now() / 1000 + thirtyMinutes) {
+    try {
+      await getValidToken();
+    } catch {
+      // Silent failure — command will handle auth if needed
+    }
+  }
+}
+silentRefreshIfNeeded().catch(() => {});
 
 program
   .command("init")
@@ -128,10 +145,18 @@ program
 program
   .command("show <skill-id>")
   .description("Inspect a single skill")
-  .action(async (skillId) => {
+  .option("--skill", "Skill view: structured schema (default)")
+  .option("--prompt", "Prompt view: system prompt + example user message + example output")
+  .action(async (skillId, cmd) => {
     const { runShow } = await import("./commands/show.js");
     const globalOpts = program.opts();
-    const code = await runShow({ skillId: skillId ?? "", json: globalOpts.json });
+    const opts = typeof cmd?.opts === "function" ? cmd.opts() : {};
+    const view = opts.prompt === true ? "prompt" : "skill";
+    const code = await runShow({
+      skillId: skillId ?? "",
+      json: globalOpts.json,
+      view,
+    });
     process.exit(code);
   });
 
@@ -200,11 +225,80 @@ program
   });
 
 program
-  .command("push")
-  .description("Deploy corpus to configured targets")
+  .command("login")
+  .description("Log in to your Bundl account (email OTP)")
   .action(async () => {
+    const { runLogin } = await import("./commands/login.js");
+    const code = await runLogin();
+    process.exit(code);
+  });
+
+program
+  .command("logout")
+  .description("Log out and clear local credentials")
+  .action(async () => {
+    const { runLogout } = await import("./commands/logout.js");
+    const code = await runLogout();
+    process.exit(code);
+  });
+
+program
+  .command("upgrade")
+  .description("Upgrade workspace plan or open subscription management")
+  .option("--manage", "Open Stripe customer portal to manage subscription")
+  .action(async (cmd) => {
+    const { runUpgrade } = await import("./commands/upgrade.js");
+    const opts = typeof cmd?.opts === "function" ? cmd.opts() : {};
+    const globalOpts = program.opts();
+    const code = await runUpgrade({
+      manage: opts.manage === true,
+      json: globalOpts.json,
+    });
+    process.exit(code);
+  });
+
+program
+  .command("whoami")
+  .description("Show current Bundl account and connection status")
+  .action(async () => {
+    const { runWhoami } = await import("./commands/whoami.js");
+    const globalOpts = program.opts();
+    const code = await runWhoami({ json: globalOpts.json });
+    process.exit(code);
+  });
+
+program
+  .command("pull")
+  .description("Pull corpus from your Bundl workspace")
+  .option("--force", "Overwrite local files even if local is newer")
+  .option("--dry-run", "Show what would be pulled without writing files")
+  .action(async (cmd) => {
+    const { runPull } = await import("./commands/pull.js");
+    const opts = typeof cmd?.opts === "function" ? cmd.opts() : {};
+    const globalOpts = program.opts();
+    const code = await runPull({
+      force: opts.force === true,
+      dryRun: opts.dryRun === true,
+      json: globalOpts.json,
+    });
+    process.exit(code);
+  });
+
+program
+  .command("push")
+  .description("Sync corpus to your Bundl workspace")
+  .option("--force", "Skip conflict check, overwrite remote")
+  .option("--dry-run", "Show what would be pushed without writing")
+  .action(async (cmd) => {
     const { push } = await import("./commands/push.js");
-    await push();
+    const opts = typeof cmd?.opts === "function" ? cmd.opts() : {};
+    const globalOpts = program.opts();
+    const code = await push({
+      force: opts.force === true,
+      dryRun: opts.dryRun === true,
+      json: globalOpts.json,
+    });
+    process.exit(typeof code === "number" ? code : 0);
   });
 
 program.parse();

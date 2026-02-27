@@ -160,18 +160,13 @@ export async function runStatus(options: StatusOptions = {}): Promise<number> {
   const workspaceId = config?.workspace_id ?? creds?.workspace_id ?? null;
   const workspaceName = config?.workspace_name ?? creds?.workspace_name ?? null;
   const connected = Boolean(workspaceId);
-  const localVersion = config?.corpus_version ?? config?.version ?? null;
-  const cloudVersion: string | null = null;
-  const inSync = cloudVersion ? localVersion === cloudVersion : true;
 
   if (options.json) {
     logger.json({
       workspace: workspaceId,
       workspace_name: workspaceName,
       connected,
-      local_version: localVersion,
-      cloud_version: cloudVersion,
-      in_sync: inSync,
+      local_version: config?.corpus_version ?? config?.version ?? null,
       skills: {
         total: skills.total,
         agent_ready: skills.agentReady,
@@ -226,13 +221,6 @@ export async function runStatus(options: StatusOptions = {}): Promise<number> {
     console.log(chalk.white(`  Validated    ${formatTimeAgo(lastValidated.at)} — ${lastValidated.agentReady}/${lastValidated.total} agent-ready`));
   } else {
     console.log(chalk.white("  Validated    — (run bundl validate)"));
-  }
-  if (cloudVersion && cloudVersion !== localVersion) {
-    console.log(chalk.hex("#e85d26")(`  Cloud        v${cloudVersion} available (run bundl pull to update)`));
-  } else if (connected) {
-    console.log(chalk.dim("  Cloud        in sync"));
-  } else {
-    console.log(chalk.dim("  Cloud        —"));
   }
   console.log(div);
   if (pendingCount > 0) {

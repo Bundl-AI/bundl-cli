@@ -1,0 +1,9 @@
+src/
+scripts/
+tsconfig.json
+.gitignore
+.eslintrc*
+jest.config*
+*.test.ts
+.env*
+README-dev.md

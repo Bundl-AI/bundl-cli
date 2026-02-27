@@ -7,7 +7,7 @@ import yaml from "js-yaml";
 import { showBanner, showSuccess, showError, showWarning, showInfo } from "../utils/banner.js";
 import { setupGracefulExit } from "../utils/keyboard.js";
 import { logger } from "../utils/logger.js";
-import { detectProvider, callProvider, showProviderHelp } from "../utils/provider.js";
+import { detectProvider, callProvider } from "../utils/provider.js";
 import { detectProjectContext } from "../utils/detect-context.js";
 import {
   readConfig,
@@ -40,15 +40,6 @@ const ROLE_TO_SLUG: Record<string, string> = {
   "Marketing Manager": "marketing",
   "Engineering Manager": "engineering",
   "Other (describe)": "other",
-};
-
-const RUNTIME_CHOICES = ["Claude Code", "OpenClaw", "OpenCode", "Cursor", "All"] as const;
-const RUNTIME_TO_TARGET: Record<string, string> = {
-  "Claude Code": "claude-code",
-  OpenClaw: "openclaw",
-  OpenCode: "opencode",
-  Cursor: "cursor",
-  All: "all",
 };
 
 const ROLE_FOLDER_SLUGS = ["sales", "customer-success", "product", "marketing", "engineering", "other"] as const;
@@ -217,9 +208,8 @@ export async function runInit(options: InitOptions = {}): Promise<void> {
     const roleSlug = roleToFolderSlug(role);
     const industry = options.industry ?? "B2B SaaS";
     const companySize = options.size ?? "50-200";
-    const toolsRaw = options.tools ?? "";
+    const toolsRaw = noAiFlag ? "" : (options.tools ?? "");
     const tools = toolsRaw ? toolsRaw.split(",").map((t) => t.trim()).filter(Boolean) : [];
-    const targetSlug = (options.target ?? "claude-code").toLowerCase().replace(/\s+/g, "-");
     const noAi = noAiFlag || !provider;
 
     ensureCorpusDir(cwd);
@@ -270,30 +260,29 @@ The trigger_description must be specific enough for an AI agent to know exactly 
       } catch {
         // ignore
       }
+      const existingConfig = readConfig(cwd);
       const config: BundlConfig = {
         version,
         ai_provider: provider ?? "claude-code",
-        targets: targetSlug === "all" ? ["claude-code", "openclaw", "opencode", "cursor"] : [targetSlug],
+        targets: existingConfig?.targets?.length ? existingConfig.targets : [],
       };
-      const existing = readConfig(cwd);
-      if (existing) {
-        config.workspace_id = existing.workspace_id;
-        config.workspace_name = existing.workspace_name;
-        config.corpus_version = existing.corpus_version;
+      if (existingConfig) {
+        config.workspace_id = existingConfig.workspace_id;
+        config.workspace_name = existingConfig.workspace_name;
+        config.corpus_version = existingConfig.corpus_version;
       }
       writeConfig(config, cwd);
       if (jsonMode) {
         logger.json({
           success: true,
           skillsGenerated: written.length,
-          target: targetSlug,
           corpusPath: corpusDir,
           validation: validation.results,
         });
         process.exit(0);
       }
       if (noAi) {
-        showSuccess(`✓ ${written.length} base templates copied to .bundl/corpus/\n\nThese are starting point templates — not customized to your company.\nTo customize with AI:\n  → Claude Code:        install at claude.ai/code\n  → Anthropic API key:  export ANTHROPIC_API_KEY=sk-ant-...\n  → OpenAI API key:     export OPENAI_API_KEY=sk-...\n\nThen run: bundl init (will detect your provider automatically)`);
+        showSuccess(`✓ ${written.length} base templates copied to .bundl/corpus/\n\nThese are starting point templates — not customized to your company.\nTo customize with AI:\n  → Claude Code:        install at claude.ai/code\n  → Anthropic API key:  export ANTHROPIC_API_KEY=sk-ant-...\n  → OpenAI API key:     export OPENAI_API_KEY=sk-...\n\nThen run: bundl init (will detect your provider automatically)\n\nDeploy to your agent runtime when ready: bundl deploy --target <runtime>`);
       }
       process.exit(0);
     }
@@ -318,41 +307,34 @@ The trigger_description must be specific enough for an AI agent to know exactly 
     } catch {
       // ignore
     }
+    const existingConfig = readConfig(cwd);
     const config: BundlConfig = {
       version,
       ai_provider: provider ?? "claude-code",
-      targets: targetSlug === "all" ? ["claude-code", "openclaw", "opencode", "cursor"] : [targetSlug],
+      targets: existingConfig?.targets?.length ? existingConfig.targets : [],
     };
-    const existing = readConfig(cwd);
-    if (existing) {
-      config.workspace_id = existing.workspace_id;
-      config.workspace_name = existing.workspace_name;
-      config.corpus_version = existing.corpus_version;
+    if (existingConfig) {
+      config.workspace_id = existingConfig.workspace_id;
+      config.workspace_name = existingConfig.workspace_name;
+      config.corpus_version = existingConfig.corpus_version;
     }
     writeConfig(config, cwd);
-    if (providerResult.hasAgentRuntime) {
-      const { runDeploy } = await import("./deploy.js");
-      const code = await runDeploy({ target: targetSlug as "claude-code" | "openclaw" | "opencode" | "cursor" | "all", json: jsonMode, ci: true });
-      if (code !== 0) process.exit(1);
-    }
     if (jsonMode) {
       logger.json({
         success: true,
         skillsGenerated: written.length,
-        target: targetSlug,
         corpusPath: corpusDir,
         validation: validation.results,
       });
       process.exit(0);
     }
-    if (!providerResult.hasAgentRuntime && provider) {
-      showSuccess(
-        `✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Validated — all agent-ready\n\nNo agent runtime detected. Your corpus is ready to deploy when you set one up.\n\nTo deploy later:\n  → Claude Code:  bundl deploy --target claude-code\n  → OpenClaw:     bundl deploy --target openclaw\n  → OpenCode:     bundl deploy --target opencode\n  → Cursor:       bundl deploy --target cursor\n\nTo generate bootstrap instructions for your agent:\n  → bundl bootstrap --target <runtime>`
-      );
-    } else if (providerResult.hasAgentRuntime) {
-      showSuccess(`✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Deployed to ${targetSlug}\n\nYour agent knows how your company works. Restart to apply.`);
+    const deployHint = "Deploy to your agent runtime when ready: bundl deploy --target <runtime>";
+    if (provider) {
+      showSuccess(`✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Validated — all agent-ready\n\n${deployHint}`);
     } else if (noAi) {
-      showSuccess(`✓ ${written.length} base templates copied to .bundl/corpus/\n\nThese are starting point templates. Run bundl init with an API key or Claude Code to customize.`);
+      showSuccess(`✓ ${written.length} base templates copied to .bundl/corpus/\n\nThese are starting point templates. Run bundl init with an API key or Claude Code to customize.\n\n${deployHint}`);
+    } else {
+      showSuccess(`✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Validated\n\n${deployHint}`);
     }
     process.exit(0);
   }
@@ -362,19 +344,32 @@ The trigger_description must be specific enough for an AI agent to know exactly 
       logger.json({ error: "Corpus exists. Add a new role interactively (omit --json)." });
       return;
     }
-    const { action } = await inquirer.prompt<{ action: string }>([
-      {
-        type: "list",
-        name: "action",
-        message: "A corpus already exists. What would you like to do?",
-        choices: [
-          { name: "Enhance existing corpus with AI (customize base templates)", value: "enhance" },
-          { name: "Add a new role", value: "add" },
-          { name: "Start fresh (overwrites existing)", value: "fresh" },
-          { name: "Cancel", value: "cancel" },
-        ],
-      },
-    ]);
+    let action: string;
+    do {
+      const choices: { name: string; value: string }[] = [];
+      if (!noAiFlag && provider) {
+        choices.push({ name: "Enhance existing corpus with AI (customize base templates)", value: "enhance" });
+      }
+      choices.push(
+        { name: "Add a new role", value: "add" },
+        { name: "Start fresh (overwrites existing)", value: "fresh" },
+        { name: "Cancel", value: "cancel" }
+      );
+      const result = await inquirer.prompt<{ action: string }>([
+        {
+          type: "list",
+          name: "action",
+          message: "A corpus already exists. What would you like to do?",
+          choices,
+        },
+      ]);
+      action = result.action;
+      if (action === "enhance" && !provider) {
+        showError("Enhance requires an AI provider. Set ANTHROPIC_API_KEY or OPENAI_API_KEY first.");
+        continue;
+      }
+      break;
+    } while (true);
     if (action === "cancel") {
       showInfo("Run bundl init anytime to continue.");
       return;
@@ -386,7 +381,7 @@ The trigger_description must be specific enough for an AI agent to know exactly 
         unlinkSync(resolve(corpusDirForFresh, f));
       }
     }
-    // add / fresh: fall through to role/target prompts below
+    // add / fresh: fall through to role/industry/size (and tools if AI) below; provider already known
     if (action === "enhance") {
       showInfo("Enhance mode: existing customized skills are left untouched; base-template skills will be customized with AI. Run bundl init again and choose Enhance when ready.");
       const ctx = detectProjectContext(cwd);
@@ -443,26 +438,46 @@ The trigger_description must be specific enough for an AI agent to know exactly 
     }
   }
 
+  // No provider and not --no-ai: inform user before collecting any inputs, then proceed or exit
+  if (!jsonMode && !provider && !noAiFlag) {
+    console.log(`
+No AI provider detected.
+→ Claude Code: claude.ai/code  
+→ Anthropic API: export ANTHROPIC_API_KEY=sk-ant-...
+→ OpenAI API:    export OPENAI_API_KEY=sk-...
+
+`);
+    const { continueBase } = await inquirer.prompt<{ continueBase: boolean }>([
+      {
+        type: "confirm",
+        name: "continueBase",
+        message: "Continue with base template only? (Y/n)",
+        default: true,
+      },
+    ]);
+    if (!continueBase) {
+      showInfo("Run bundl init with an API key or use bundl init --no-ai to skip AI.");
+      return;
+    }
+  }
+
   let role: string;
   let industry: string;
   let companySize: string;
   let tools: string[];
-  let runtime: string;
 
-  if (options.role && options.target) {
+  if (options.role) {
     role = options.role;
     industry = options.industry ?? "B2B SaaS";
     companySize = options.size ?? "50–200";
     tools = options.tools ? options.tools.split(",").map((t) => t.trim()) : [];
-    runtime = options.target;
   } else {
     const answers = await inquirer.prompt<
       {
         role: string;
         industry: string;
         companySize: string;
-        tools: string[];
-        runtime: string;
+        tools?: string[];
       }
     >([
       {
@@ -491,46 +506,19 @@ The trigger_description must be specific enough for an AI agent to know exactly 
         name: "tools",
         message: "What tools does this role use? (space to select)",
         choices: TOOL_CHOICES,
-        when: () => !jsonMode,
-      },
-      {
-        type: "list",
-        name: "runtime",
-        message: "What agent runtime are you using?",
-        choices: [...RUNTIME_CHOICES],
-        when: () => !options.target,
+        when: () => !jsonMode && !noAiFlag,
       },
     ]);
     role = options.role ?? answers.role ?? ROLE_CHOICES[0];
     industry = answers.industry ?? options.industry ?? "B2B SaaS";
     companySize = answers.companySize ?? options.size ?? "50–200";
     tools = Array.isArray(answers.tools) ? answers.tools : options.tools ? options.tools.split(",").map((t) => t.trim()) : [];
-    runtime = options.target ?? answers.runtime ?? "Claude Code";
   }
 
   const roleSlug = roleToFolderSlug(role);
-  const targetSlug =
-    RUNTIME_TO_TARGET[runtime] ?? runtime.replace(/\s+/g, "-").toLowerCase();
 
-  if (!jsonMode) {
-    if (provider) {
-      logger.info(`Using ${provider} for generation`);
-    } else {
-      showProviderHelp();
-      if (!noAiFlag) {
-        const { continueBase } = await inquirer.prompt<{ continueBase: boolean }>([
-          {
-            type: "confirm",
-            name: "continueBase",
-            message: "Continue with base template only? (no AI customization)",
-            default: false,
-          },
-        ]);
-        if (!continueBase) {
-          process.exit(0);
-        }
-      }
-    }
+  if (!jsonMode && provider) {
+    logger.info(`Using ${provider} for generation`);
   }
 
   ensureCorpusDir(cwd);
@@ -639,10 +627,6 @@ The trigger_description must be specific enough for an AI agent to know exactly 
     }
   }
 
-  const targetsToDeploy =
-    targetSlug === "all"
-      ? ["claude-code", "openclaw", "opencode", "cursor"]
-      : [targetSlug];
   let version = "0.1.0";
   try {
     const pkgPath = join(getPackageRoot(), "package.json");
@@ -651,56 +635,48 @@ The trigger_description must be specific enough for an AI agent to know exactly 
   } catch {
     // ignore
   }
+  const existingConfig = readConfig(cwd);
   const config: BundlConfig = {
     version,
     ai_provider: provider ?? "claude-code",
-    targets: targetsToDeploy,
+    targets: existingConfig?.targets?.length ? existingConfig.targets : [],
   };
-  const existing = readConfig(cwd);
-  if (existing) {
-    config.workspace_id = existing.workspace_id;
-    config.workspace_name = existing.workspace_name;
-    config.corpus_version = existing.corpus_version;
+  if (existingConfig) {
+    config.workspace_id = existingConfig.workspace_id;
+    config.workspace_name = existingConfig.workspace_name;
+    config.corpus_version = existingConfig.corpus_version;
   }
   writeConfig(config, cwd);
-
-  if (providerResult.hasAgentRuntime) {
-    const { runDeploy } = await import("./deploy.js");
-    await runDeploy({
-      target: targetSlug as "claude-code" | "openclaw" | "opencode" | "cursor" | "all",
-      json: false,
-      ci: true,
-    });
-  }
 
   if (jsonMode) {
     logger.json({
       success: true,
       skillsGenerated: written.length,
-      target: targetSlug,
       corpusPath: corpusDir,
       validation: validation.results,
     });
     return;
   }
 
-  if (!providerResult.hasAgentRuntime && provider) {
-    showSuccess(
-      `✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Validated — all agent-ready\n\n  No agent runtime detected. Your corpus is ready to deploy when you set one up.\n\n  To deploy later:\n  → Claude Code:  bundl deploy --target claude-code\n  → OpenClaw:     bundl deploy --target openclaw\n  → OpenCode:     bundl deploy --target opencode\n  → Cursor:       bundl deploy --target cursor\n\n  To generate bootstrap instructions for your agent:\n  → bundl bootstrap --target <runtime>`
-    );
-    return;
-  }
+  const deployHint =
+    "Deploy to your agent runtime when ready: bundl deploy --target <runtime>";
 
   if (noAiFlag && !provider) {
     showSuccess(
-      `✓ ${written.length} base templates copied to .bundl/corpus/\n\n  These are starting point templates — not customized to your company.\n  To customize with AI:\n  → Claude Code:        install at claude.ai/code\n  → Anthropic API key:  export ANTHROPIC_API_KEY=sk-ant-...\n  → OpenAI API key:     export OPENAI_API_KEY=sk-...\n\n  Then run: bundl init (will detect your provider automatically)`
+      `✓ ${written.length} base templates copied to .bundl/corpus/\n  ✓ Validated\n\n  These are starting point templates — not customized to your company.\n  To customize with AI:\n  → Claude Code:        install at claude.ai/code\n  → Anthropic API key:  export ANTHROPIC_API_KEY=sk-ant-...\n  → OpenAI API key:     export OPENAI_API_KEY=sk-...\n\n  Then run: bundl init (will detect your provider automatically)\n\n  ${deployHint}`
     );
     return;
   }
 
-  const targetLabel = targetSlug === "all" ? "all runtimes" : targetSlug;
+  if (provider) {
+    showSuccess(
+      `✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Validated — all agent-ready\n\n  ${deployHint}`
+    );
+    return;
+  }
+
   showSuccess(
-    `✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Deployed to ${targetLabel}\n\n  Your ${runtime} agent knows how your company works.\n  Restart ${runtime} to apply.\n\n  To share with your team: bundl push`
+    `✓ ${written.length} skills generated in .bundl/corpus/\n  ✓ Validated\n\n  ${deployHint}`
   );
 }
 

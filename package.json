@@ -2,23 +2,49 @@
   "name": "@bundl-corp/cli",
   "version": "0.1.0",
   "description": "The open corpus standard for AI employees",
-  "keywords": ["ai", "agents", "claude", "llm", "corpus", "agent-skills", "sop", "openclaw", "opencode", "cursor"],
+  "keywords": [
+    "ai",
+    "agents",
+    "claude",
+    "llm",
+    "corpus",
+    "agent-skills",
+    "sop",
+    "openclaw",
+    "opencode",
+    "cursor"
+  ],
   "homepage": "https://bundl.ai",
-  "repository": { "type": "git", "url": "https://github.com/bundl-ai/bundl-cli" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bundl-ai/bundl-cli"
+  },
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
-  "bin": { "bundl": "./dist/index.js" },
-  "engines": { "node": ">=18" },
-  "files": ["dist", "src/roles", "src/schema/corpus.json", "README.md", "LICENSE"],
+  "bin": {
+    "bundl": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "src/roles",
+    "src/schema/corpus.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "prepare": "npm run build",
-    "test": "jest",
+    "prepublishOnly": "npm run build && node scripts/inject-config.cjs",
+    "test": "echo 'No tests yet'",
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
     "axios": "^1.13.5",
     "chalk": "^5.6.2",
     "commander": "^14.0.3",
@@ -26,6 +52,7 @@
     "figlet": "^1.10.0",
     "inquirer": "^12.11.1",
     "js-yaml": "^4.1.1",
+    "open": "^11.0.0",
     "ora": "^8.2.0",
     "zod": "^3.25.76"
   },

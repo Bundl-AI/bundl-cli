@@ -147,9 +147,23 @@ export async function runSimulate(options: SimulateOptions = {}): Promise<number
   setupGracefulExit();
   if (!jsonMode && !ciMode) showBanner();
 
-  const providerResult = await detectProvider();
-  const provider = providerResult.provider;
+  let providerResult = await detectProvider();
+  let provider = providerResult.provider;
+
+  if (!provider && !jsonMode && !ciMode) {
+    const { promptNoProvider } = await import("../utils/no-provider-menu.js");
+    const resolved = await promptNoProvider();
+    if (resolved) {
+      providerResult = await detectProvider();
+      provider = providerResult.provider;
+    }
+  }
+
   if (!provider) {
+    if (jsonMode || ciMode) {
+      logger.error("No AI provider detected. Set ANTHROPIC_API_KEY or OPENAI_API_KEY, or use Claude Code.");
+      return 1;
+    }
     showProviderHelp();
     return 1;
   }

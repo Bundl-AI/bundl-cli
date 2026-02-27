@@ -1,10 +1,10 @@
 <!-- BUNDL GENERATED — edit corpus in .bundl/corpus/ not here -->
-<!-- bundl v0.1.0 | corpus v0.0.0 | 2026-02-24T17:25:43.393Z -->
+<!-- bundl v0.1.0 | corpus v0.0.0 | 2026-02-26T20:49:20.302Z -->
 
 ## Agent Operating Instructions
 
 ### Role
-product-manager — General
+sales-development-rep — General
 
 ### Hard Constraints
 

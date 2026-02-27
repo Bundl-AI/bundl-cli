@@ -3,6 +3,13 @@ import { resolve } from "node:path";
 import yaml from "js-yaml";
 import { z } from "zod";
 
+/** Supabase URL — replaced at publish by scripts/inject-config.js */
+export const SUPABASE_URL = process.env.BUNDL_SUPABASE_URL || "__SUPABASE_URL__";
+/** Supabase anon key — replaced at publish by scripts/inject-config.js */
+export const SUPABASE_ANON_KEY = process.env.BUNDL_SUPABASE_ANON_KEY || "__SUPABASE_ANON_KEY__";
+/** Bundl API base URL — replaced at publish by scripts/inject-config.js */
+export const BUNDL_API_URL = process.env.BUNDL_API_URL || "__BUNDL_API_URL__";
+
 const BundlConfigSchema = z.object({
   version: z.string(),
   ai_provider: z.enum(["claude-code", "anthropic-api", "openai-api"]),
@@ -10,6 +17,7 @@ const BundlConfigSchema = z.object({
   workspace_id: z.string().optional(),
   workspace_name: z.string().optional(),
   corpus_version: z.string().optional(),
+  last_pushed: z.number().optional(),
 });
 
 export type BundlConfig = z.infer<typeof BundlConfigSchema>;

@@ -43,10 +43,9 @@ That's it. In under 3 minutes your Claude Code or OpenClaw agent knows your ICP,
 
 ? What role are you building for?  Sales Development Rep
 ? What industry?  B2B SaaS
-? What agent runtime?  Claude Code
 ? What tools does this role use?  Salesforce, Gmail, LinkedIn
 
-✔ Using Claude Code for generation
+✔ Using your AI provider for generation
 
   ⠋ lead-qualification
   ✓ lead-qualification
