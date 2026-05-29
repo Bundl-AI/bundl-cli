@@ -206,6 +206,15 @@ program
   });
 
 program
+  .command("studio")
+  .description("Start local dashboard with terminal mirror at http://localhost:8787")
+  .action(async () => {
+    const { runStudio } = await import("./commands/studio.js");
+    await runStudio();
+    // Do not exit — server keeps process alive until SIGINT
+  });
+
+program
   .command("deploy")
   .description("Compile corpus to target runtime(s)")
   .option(

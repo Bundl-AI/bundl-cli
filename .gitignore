@@ -55,3 +55,7 @@ npm-debug.log*
 # Test output
 coverage/
 .jest-cache/
+
+*.env
+.bundl-keys
+.bundl.local

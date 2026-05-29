@@ -17,16 +17,28 @@ function getVersion(): string {
 }
 
 /**
- * Renders the Bundl banner for interactive commands (init, simulate).
+ * Returns the banner as a single string (with ANSI codes). Use for terminal mirror in Studio.
+ */
+export function getBannerText(): string {
+  const bannerText = figlet.textSync("bundl", { font: "Slant" });
+  return (
+    chalk.white(bannerText) +
+    "\n" +
+    chalk.hex("#e85d26")("  The open corpus standard for AI employees.") +
+    "\n" +
+    chalk.dim(`  ${getVersion()}`) +
+    "\n" +
+    chalk.dim("  ─────────────────────────────────────────") +
+    "\n\n"
+  );
+}
+
+/**
+ * Renders the Bundl banner for interactive commands (init, simulate, studio).
  * Do not call from validate, status, push — those must be CI-safe.
  */
 export function showBanner(): void {
-  const bannerText = figlet.textSync("bundl", { font: "Slant" });
-  console.log(chalk.white(bannerText));
-  console.log(chalk.hex("#e85d26")("  The open corpus standard for AI employees."));
-  console.log(chalk.dim(`  ${getVersion()}`));
-  console.log(chalk.dim("  ─────────────────────────────────────────"));
-  console.log();
+  console.log(getBannerText());
 }
 
 export function showSuccess(message: string): void {
